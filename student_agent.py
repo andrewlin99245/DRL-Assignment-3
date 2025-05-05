@@ -138,7 +138,7 @@ class Agent(object):
 
         return tensor
     def act(self, observation):
-        self.online.reset_noise()
+        #self.online.reset_noise()
         obs = self.observation(observation)
         if self.first:
            self.frames.clear()
