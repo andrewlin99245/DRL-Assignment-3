@@ -134,11 +134,9 @@ class Agent(object):
         resized = gray_img.resize((90, 84), resample=Image.BILINEAR)
 
         # Convert to tensor (auto scales to [0,1] and shape C×H×W)
-        tensor = TF.to_tensor(resized)  # shape: (1, 84, 90), dtype=float32
-
-        return tensor
+        return resized
     def act(self, observation):
-        #self.online.reset_noise()
+        self.online.reset_noise()
         obs = self.observation(observation)
         if self.first:
            self.frames.clear()
@@ -149,13 +147,12 @@ class Agent(object):
             self.skip_count %= self.skip_frame
             return self.last_action
         else:
-            self.skip_count += 1
             self.frames.append(obs)
+            self.skip_count += 1
+            stacked_frames = np.stack(list(self.frames), axis=0)
+            stacked_frames = np.transpose(stacked_frames, (1, 0, 2, 3)) 
             with torch.no_grad():
-                stacked_frames = torch.stack(list(self.frames), dim=0).to(self.device)
-                stacked_frames = np.transpose(stacked_frames, (1, 0, 2, 3))  # Shape: (4, 84, 84)
                 q_values = self.online(stacked_frames)
-                action = q_values.max(1)[1].item()
+            action = q_values.max(1)[1].item()
             self.last_action = action
             return action
-
