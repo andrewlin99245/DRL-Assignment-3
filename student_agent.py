@@ -69,32 +69,25 @@ class DuelingNetwork(nn.Module):
         # Convolutional feature extractor
         self._conv = nn.Sequential(
             nn.Conv2d(channels, 32, kernel_size=8, stride=4),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             nn.Conv2d(32, 64, kernel_size=4, stride=2),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             nn.Conv2d(64, 64, kernel_size=3, stride=1),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=False),
+            nn.Flatten()
         )
-        # Determine flattened size dynamically
-        with torch.no_grad():
-            dummy_input = torch.zeros(1, channels, 84, 90)
-            flat_size = self._conv(dummy_input).view(1, -1).size(1)
-        
+        flat_size = 3136
         self._value_hidden = PerturbedLinear(flat_size, 512)
         self._adv_hidden = PerturbedLinear(flat_size, 512)
         self._flatten = nn.Flatten()
         self._value_out = PerturbedLinear(512, 1)
         self._adv_out = PerturbedLinear(512, num_actions)
-        self.ReLU = nn.ReLU(inplace=True)
+        self.ReLU = nn.ReLU(inplace=False)
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         
         x = x.float() / 255.0
 
-        # extract convolutional features
-        conv_out = self._conv(x)
-    
-        # flatten to (batch_size, feature_dim)
-        embeddings = conv_out.view(conv_out.size(0), -1)
+        embeddings = self._conv(x)
     
         # value branch
         v_hidden = self._value_hidden(embeddings)
@@ -119,7 +112,7 @@ class DuelingNetwork(nn.Module):
 model_path = 'the_final_ckpt.pth'
 class Agent(object):
     """Agent that acts randomly."""
-    def __init__(self,device):
+    def __init__(self):
         self.device = DEVICE
         self.action_space = gym.spaces.Discrete(12)
         self.online = DuelingNetwork(4, 12).to(self.device)
