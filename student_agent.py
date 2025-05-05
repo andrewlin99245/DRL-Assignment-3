@@ -117,7 +117,7 @@ class DuelingNetwork(nn.Module):
 model_path = 'final_ckpt.pth'
 class Agent(object):
     """Agent that acts randomly."""
-    def __init__(self,device):
+    def __init__(self):
         self.device = DEVICE
         self.action_space = gym.spaces.Discrete(12)
         self.online = DuelingNetwork(4, 12).to(self.device)
