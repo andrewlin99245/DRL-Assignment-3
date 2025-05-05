@@ -136,7 +136,7 @@ class Agent(object):
         # Convert to tensor (auto scales to [0,1] and shape C×H×W)
         tensor = TF.to_tensor(resized)  # shape: (1, 84, 90), dtype=float32
 
-        return tensor.numpy()
+        return tensor
     def act(self, observation):
         self.online.reset_noise()
         obs = self.observation(observation)
@@ -152,9 +152,7 @@ class Agent(object):
             self.skip_count += 1
             self.frames.append(obs)
             with torch.no_grad():
-                stacked_frames = torch.stack(
-                [torch.from_numpy(f) for f in self.frames], dim=0
-                ).to(self.device)
+                stacked_frames = torch.stack(list(self.frames), dim=0).to(self.device)
                 stacked_frames = np.transpose(stacked_frames, (1, 0, 2, 3))  # Shape: (4, 84, 84)
                 q_values = self.online(stacked_frames)
                 action = q_values.max(1)[1].item()
