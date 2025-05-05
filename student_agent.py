@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from collections import deque
+import torchvision.transforms.functional as TF
+from PIL import Image
 # Do not modify the input of the 'act' function and the '__init__' function. 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class PerturbedLinear(nn.Module):
@@ -114,10 +116,10 @@ class DuelingNetwork(nn.Module):
         perturbed_linears = (self._value_hidden, self._value_out, self._adv_hidden, self._adv_out)
         for layer in perturbed_linears:
             layer.sample_noise()
-model_path = 'final_ckpt.pth'
+model_path = 'the_final_ckpt.pth'
 class Agent(object):
     """Agent that acts randomly."""
-    def __init__(self):
+    def __init__(self,device):
         self.device = DEVICE
         self.action_space = gym.spaces.Discrete(12)
         self.online = DuelingNetwork(4, 12).to(self.device)
@@ -128,14 +130,20 @@ class Agent(object):
         self.last_action = None 
         self.first = True
         self.frames = deque(maxlen=4)
-    def observation(self, obs):  # obs: H×W×C uint8
-        obs = np.ascontiguousarray(obs)
-        img = torch.from_numpy(obs).float()  # H×W×C
-        img = img.permute(2, 0, 1)[None]  # 1×C×H×W
-        r, g, b = img[:, 0:1], img[:, 1:2], img[:, 2:3]
-        gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        gray = F.interpolate(gray, size=(84, 90), mode="bilinear", align_corners=False)
-        return gray.squeeze(0).cpu().numpy()  # 1×84×84 numpy
+    def observation(self, obs):
+        # Convert array to PIL image
+        image = Image.fromarray(obs)
+
+        # Convert to grayscale
+        gray_img = image.convert("L")  # "L" = grayscale mode
+
+        # Resize to target dimensions
+        resized = gray_img.resize((90, 84), resample=Image.BILINEAR)
+
+        # Convert to tensor (auto scales to [0,1] and shape C×H×W)
+        tensor = TF.to_tensor(resized)  # shape: (1, 84, 90), dtype=float32
+
+        return tensor.numpy()
     def act(self, observation):
         self.online.reset_noise()
         obs = self.observation(observation)
