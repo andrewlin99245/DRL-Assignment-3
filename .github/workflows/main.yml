@@ -31,7 +31,7 @@ jobs:
       run: |
         pip install gdown
         # Using the gdown command with the file id from the given URL
-        gdown --id 14KdVfaVU1HNeSz2sMfoK1Jr1hXt0bjdr
+        gdown --id 1C9jqfnXoLjR54iwVARAkUvzw0Q1S6b4J
 
     - name: 4. Ensure env.so is executable
       run: chmod +x eval.cpython-38-x86_64-linux-gnu.so
