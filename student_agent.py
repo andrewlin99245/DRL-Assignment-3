@@ -134,7 +134,7 @@ class Agent(object):
         resized = gray_img.resize((90, 84), resample=Image.BILINEAR)
         tensor = TF.to_tensor(resized)  # shape: (1, 84, 90), dtype=float32
         # Convert to tensor (auto scales to [0,1] and shape C×H×W)
-        return resized
+        return tensor
     def act(self, observation):
         self.online.reset_noise()
         obs = self.observation(observation)
