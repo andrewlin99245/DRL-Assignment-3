@@ -132,7 +132,7 @@ class Agent(object):
 
         # Resize to target dimensions
         resized = gray_img.resize((90, 84), resample=Image.BILINEAR)
-
+        tensor = TF.to_tensor(resized)  # shape: (1, 84, 90), dtype=float32
         # Convert to tensor (auto scales to [0,1] and shape C×H×W)
         return resized
     def act(self, observation):
@@ -149,7 +149,7 @@ class Agent(object):
         else:
             self.frames.append(obs)
             self.skip_count += 1
-            stacked_frames = np.stack(list(self.frames), axis=0)
+            stacked_frames = torch.stack(list(self.frames), dim=0).to(self.device)
             stacked_frames = np.transpose(stacked_frames, (1, 0, 2, 3)) 
             with torch.no_grad():
                 q_values = self.online(stacked_frames)
